@@ -1,0 +1,50 @@
+#!/bin/bash
+#
+# download data from berkeley-earth-temperature
+#
+
+function f_download {
+
+    pushd '../data'
+    
+    curl -f -o "Berkeley_yearly.txt" \
+    "https://berkeley-earth-temperature.s3.us-west-1.amazonaws.com/Global/Land_and_Ocean_summary.txt"
+    
+    curl -f -o "Berkeley_monthly.txt" \
+    "https://berkeley-earth-temperature.s3.us-west-1.amazonaws.com/Global/Land_and_Ocean_complete.txt"
+    
+    popd
+
+}
+
+#
+# convert data from Berkeley 
+#
+
+
+function f_convert {
+
+    # GLOBAL Land-Ocean Temperature Index 
+
+       
+    [ -f "../data/Berkeley_yearly.csv" ] \
+    && rm "../data/Berkeley_yearly.csv"
+    
+    cat "../data/Berkeley_yearly.txt" \
+        | sed -f "sed/Berkeley_yearly.sed" \
+        > "../data/Berkeley_yearly.csv"
+
+    [ -f "../data/Berkeley_monthly.csv" ] \
+    && rm "../data/Berkeley_monthly.csv"
+
+    cat "../data/Berkeley_monthly.txt" \
+        | sed -f "sed/Berkeley_monthly.sed"  \
+        > "../data/Berkeley_monthly.csv"
+    
+}
+
+#
+# Main program
+#
+f_download
+f_convert

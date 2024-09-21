@@ -1,0 +1,113 @@
+#!/bin/bash
+
+#
+# download data
+#
+
+CurrYear=$(date +%Y)
+LastYear=$((CurrYear -1))
+
+function f_download {
+
+    pushd ../data
+    
+    #GISS
+    
+    curl -f -o "GISS.txt.gz" \
+    "https://data.giss.nasa.gov/gistemp/station_data_v4_globe/v4.mean_GISS_homogenized.txt.gz"
+    
+    gzip -d "GISS.txt.gz"
+    
+ 
+    # NOAA
+    
+    curl -f -o "noaa-mon.csv" \
+    "https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/global/time-series/globe/land_ocean/all/12/1850-${CurrYear}/data.csv"
+    
+    curl -f -o "noaa-ann.csv" \
+    "https://www.ncei.noaa.gov/access/monitoring/climate-at-a-glance/global/time-series/globe/land_ocean/ann/12/1850-${LastYear}.csv"
+    
+    # Global-mean monthly, seasonal, and annual means, 1880-present, updated through most recent month: TXT, CSV
+    
+    curl -f -o "nasa.txt" \
+    "https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.txt"
+    
+    # MetOffice
+    
+    curl -f -o "MetOffice_annual.csv" \
+    "https://www.metoffice.gov.uk/hadobs/hadcrut5/data/HadCRUT.5.0.2.0/analysis/diagnostics/HadCRUT.5.0.2.0.analysis.summary_series.global.annual.csv"
+    
+    curl -f -o "MetOffice_monthly.csv" \
+    "https://www.metoffice.gov.uk/hadobs/hadcrut5/data/HadCRUT.5.0.2.0/analysis/diagnostics/HadCRUT.5.0.2.0.analysis.summary_series.global.monthly.csv"
+    
+    #JMA
+    
+    curl -f -o "jma_year_wld.csv" \
+    "https://ds.data.jma.go.jp/tcc/tcc/products/gwp/temp/list/csv/year_wld.csv"
+    
+    popd
+
+}
+
+#
+# convert data from giss.nasa.gov 
+#
+
+
+function f_convert {
+
+    
+    # MetOffice
+    
+    sed --in-place 's#-#,##' "../data/MetOffice_monthly.csv"
+
+    # GISS
+    
+    # GLOBAL Land-Ocean Temperature Index 
+    
+    sed '1,7 d; /Year/d; /^$/ d; /Divide/,$ d; s#  *#,#g;' \
+        '../data/nasa.txt' \
+    | awk -F ',' -f "awk/NASA.awk" \
+    | sed '/\*/ d' \
+    | awk -F ',' -f "awk/NASA_100.awk" \
+    > "../data/nasa.csv" \
+
+    [ -f "../data/Stations.csv" ] && rm "../data/Stations.csv"
+    
+    grep '^[A-Z]'  "../data/GISS.txt" \
+    | sed 's#\*##; s#  *#,#g' \
+    > "../data/Stations.csv"
+    
+    
+    [ -f "../data/Temperature.csv" ] && rm "../data/Temperature.csv"
+    
+    cat "../data/GISS.txt" \
+        | sed '/^[A-Z]/ s#^#S,#; s#  *#,#g;'  \
+        | awk -F ',' -f "awk/GISS.awk" \
+        > "../data/Temperature.csv"
+
+    sed --in-place -f "sed/NOAA_monthly.sed" "../data/noaa-mon.csv"
+
+    sed --in-place -f "sed/NOAA_yearly.sed" "../data/noaa-ann.csv"
+
+}
+
+#
+# Import data into database
+#
+
+function f_import {
+ 
+ echo tbd
+ 
+}
+
+#
+# Main program
+#
+
+[ ! -e ../data ] && mkdir ../data
+
+f_download
+f_convert
+f_import

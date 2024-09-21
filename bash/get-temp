@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# download data from giss.nasa.gov
+#
+
+function f_download {
+
+    pushd '../data'
+    
+    curl -f -o "GISS.txt.gz" \
+    "https://data.giss.nasa.gov/gistemp/station_data_v4_globe/v4.mean_GISS_homogenized.txt.gz"
+    
+    gzip -d "GISS.txt.gz"
+    
+    popd
+
+}
+
+#
+# convert data from GISS 
+#
+
+
+function f_convert {
+
+    # GLOBAL Land-Ocean Temperature Index 
+
+    
+    [ -f "../data/Stations.csv" ] && rm "../data/Stations.csv"
+    
+    grep '^[A-Z]'  "../data/GISS.txt" \
+    | sed 's#\*##; s#  *#,#g' \
+    > "../data/Stations.csv"
+    
+    
+    [ -f "../data/Temperature.csv" ] && rm "../data/Temperature.csv"
+    
+    cat "../data/GISS.txt" \
+        | sed '/^[A-Z]/ s#^#S,#; s#  *#,#g;'  \
+        | awk -F ',' -f "awk/GISS.awk" \
+        > "../data/Temperature.csv"
+    
+}
+
+#
+# Main program
+#
+f_download
+f_convert

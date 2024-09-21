@@ -1,0 +1,50 @@
+USE `GISS`;
+
+DROP TABLE IF EXISTS `RAErg`;
+
+CREATE TABLE IF NOT EXISTS `RAErg` (
+      `IdxID` CHAR(11) NOT NULL COMMENT 'ID des Temperaturindex'
+    , `ID` CHAR(11) NOT NULL COMMENT 'ID der Messstation'
+    , `a` DOUBLE (10,2) DEFAULT NULL COMMENT 'Korreletionskoeffizienz a'
+    , `b` DOUBLE (10,2) DEFAULT NULL COMMENT 'Korreletionskoeffizienz b'
+    , Jahre INT(6) DEFAULT 0 COMMENT 'Anzahl Jahreswerte'
+    , VonJahr INT(6) DEFAULT 0 COMMENT 'Erstes Jahr'
+    , BisJahr INT(6) DEFAULT 0 COMMENT 'Letztes Jahr'
+    , PRIMARY KEY ( `IdxID`, `ID` )
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  ;
+  
+LOAD DATA LOCAL 
+INFILE '/data/git/R/GISS/data/RAErg_Berkeley.csv'      
+INTO TABLE `RAErg`
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+IGNORE 1 ROWS;
+
+LOAD DATA LOCAL 
+INFILE '/data/git/R/GISS/data/RAErg_JMA.csv'      
+INTO TABLE `RAErg`
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+IGNORE 1 ROWS;
+
+LOAD DATA LOCAL 
+INFILE '/data/git/R/GISS/data/RAErg_MetOffice.csv'      
+INTO TABLE `RAErg`
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+IGNORE 1 ROWS;
+
+LOAD DATA LOCAL 
+INFILE '/data/git/R/GISS/data/RAErg_NASA.csv'      
+INTO TABLE `RAErg`
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+IGNORE 1 ROWS;
+
+LOAD DATA LOCAL 
+INFILE '/data/git/R/GISS/data/RAErg_NOAA.csv'      
+INTO TABLE `RAErg`
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"' 
+IGNORE 1 ROWS;
